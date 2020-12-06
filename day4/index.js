@@ -12,16 +12,16 @@ const fs = require("fs");
 */
 const required = ["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"];
 let obj = {},
-  valid = 0;
-fs.readFile("testdata.txt", "utf-8", (err, data) => {
+  valid = 0,
+  items;
+fs.readFile("data.txt", "utf-8", (err, data) => {
   if (err) {
     console.error(err);
     return;
   }
-  let passports = data
-    .toString()
-    .split("\n\n")
-    .map((n) => n.replace(/\n/g, " "))
-    .map((el) => el.split(" "))//.replace(/(:[A-Za-z0-9])\w+)/g, ""))
-    console.log(passports);
+  let passports = data.toString().split("\n\n");
+  passports.forEach((passport) => {
+    if(required.every(item=>passport.includes(item)))valid++
+  });
+  console.log(valid);
 });
