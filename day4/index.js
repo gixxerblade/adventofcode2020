@@ -22,6 +22,6 @@ fs.readFile("testdata.txt", "utf-8", (err, data) => {
     .toString()
     .split("\n\n")
     .map((n) => n.replace(/\n/g, " "))
-    .map((el) => el.split(" ").replace(/(:[A-Za-z0-9])\w+)/g, ""))
+    .map((el) => el.split(" "))//.replace(/(:[A-Za-z0-9])\w+)/g, ""))
     console.log(passports);
 });
