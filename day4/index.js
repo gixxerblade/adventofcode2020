@@ -1,22 +1,12 @@
-// Day 4 part 1
 const fs = require("fs");
-/* 
-'byr', (Birth Year)
-'iyr', (Issue Year)
-'eyr', (Expiration Year)
-'hgt', (Height)
-'hcl', (Hair Color)
-'ecl', (Eye Color)
-'pid', (Passport ID)
-'cid', (Country ID)
-*/
+const path = require("path");
 
 // Day 4 part 1
-const required = ["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"];
-let validPassports = [],
-  valid = 0,
-  items;
+
 fs.readFile("data.txt", "utf-8", (err, data) => {
+  const required = ["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"];
+  let validPassports = [],
+    valid = 0;
   if (err) {
     console.error(err);
     return;
@@ -31,26 +21,67 @@ fs.readFile("data.txt", "utf-8", (err, data) => {
   console.log(valid);
 });
 
-//Day 4 part 2
+// Day 4 part 2
 
-/* 
-byr (Birth Year) - four digits; at least 1920 and at most 2002.
-iyr (Issue Year) - four digits; at least 2010 and at most 2020.
-eyr (Expiration Year) - four digits; at least 2020 and at most 2030.
-hgt (Height) - a number followed by either cm or in:
-If cm, the number must be at least 150 and at most 193.
-If in, the number must be at least 59 and at most 76.
-hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
-ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
-pid (Passport ID) - a nine-digit number, including leading zeroes.
-cid (Country ID) - ignored, missing or not.
-*/
+const input = fs
+  .readFileSync(path.join(__dirname, "data.txt"), "utf-8")
+  .split("\n\n");
 
-fs.readSync("testdata.txt", "utf-8", (err, data) => {
-  if (err) {
-    console.error(err);
-    return;
+// 0. Config
+const requiredFields = [
+  "byr",
+  "iyr",
+  "eyr",
+  "hgt",
+  "hcl",
+  "ecl",
+  "pid" /* 'cid' */,
+];
+
+// 1. Normalize Passport-Data
+function getAttribute(passwort, attribute) {
+  const foundAttribute = passwort.find((i) => i.startsWith(attribute));
+  if (!foundAttribute) {
+    return null;
   }
-  let [{key:value}, passData ] = data.split(" ")
-  console.log(key, value, passData);
-});
+  return foundAttribute.replace(`${attribute}:`, "");
+}
+
+// Normalize break and spaces
+const passports = input.map((i) => i.replace(/\n/g, " ").split(" "));
+
+const parsedPassports = passports.map((i) =>
+  requiredFields.reduce((prev, attribute) => {
+    return { ...prev, [attribute]: getAttribute(i, attribute) };
+  }, {})
+);
+// 2. func for missing attributes
+function validPassport(parsedPassport) {
+  const validations = {
+    byr: (byr) => parseInt(byr, 10) >= 1920 && parseInt(byr, 10) <= 2002,
+    iyr: (iyr) => parseInt(iyr, 10) >= 2010 && parseInt(iyr, 10) <= 2020,
+    eyr: (eyr) => parseInt(eyr, 10) >= 2020 && parseInt(eyr, 10) <= 2030,
+    hgt: (hgt) => {
+      if (hgt?.includes("cm")) {
+        return parseInt(hgt, 10) >= 150 && parseInt(hgt, 10) <= 193;
+      }
+      if (hgt?.includes("in")) {
+        return parseInt(hgt, 10) >= 59 && parseInt(hgt, 10) <= 76;
+      }
+
+      return false;
+    },
+    hcl: (hcl) => hcl?.match(/^#[0-9A-F]{6}$/i),
+    ecl: (ecl) =>
+      ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"].includes(ecl),
+    pid: (pid) => pid?.match(/^[0-9]{9}$/),
+  };
+
+  return Object.keys(validations).every((attribute) =>
+    validations[attribute](parsedPassport[attribute])
+  );
+}
+
+// 3. Count Vaild Passports
+const validPasswords = parsedPassports.filter(validPassport).length;
+console.log(validPasswords); // Check for valid passports
